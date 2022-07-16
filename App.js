@@ -1,72 +1,76 @@
-import {useState} from 'react'
-import { Button, StyleSheet, Text, TextInput, View, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, FlatList, Button } from 'react-native';
+import GoalItem from './components/GoalItem';
+import GoalInput from './components/GoalInput';
+import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
-  const [enteredGoalText, setEnteredGoalText] = useState('');
-  const [courseGoals, setCourseGoals] = useState([])
+  const [courseGoals, setCourseGoals] = useState([]);
+  const [modalIsVisible, setModalIsVisible] = useState(false);
 
-  function goalInputHandler(enteredText){
-    setEnteredGoalText(enteredText)
-  };
-
-  function addGoalHandler(){
-    setCourseGoals(currentCourseGoals => [...currentCourseGoals, enteredGoalText])
+  function startAddGoalHandler() {
+    setModalIsVisible(true);
   }
+
+  function endAddGoalHandler() {
+    setModalIsVisible(false);
+  }
+
+  function addGoalHandler(enteredGoalText) {
+    setCourseGoals((currentCourseGoals) => [
+      ...currentCourseGoals,
+      { text: enteredGoalText, id: Math.random().toString() },
+    ]);
+    endAddGoalHandler();
+  }
+
+  function deleteGoalHandler(id) {
+    setCourseGoals((currentCourseGoals) =>
+      currentCourseGoals.filter((goal) => goal.id !== id)
+    );
+  }
+
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.inputContainer}>
-        <TextInput style={styles.textInput}
-            placeholder="Your course goal"
-            onChangeText={goalInputHandler}
-            />
-          <Button title="Add Goal" onPress={addGoalHandler}/>
-       </View>
-       <View style={styles.goalsContainer}>
-       <ScrollView style={styles.goalsContainer}>
-         {courseGoals.map((goal, index) => 
-         <View style={styles.goalItem} key={index}>
-           <Text key={index} style={styles.goalText}>{goal}</Text>
-           </View>)}
-       </ScrollView>
-       </View>
+    <>
+      <StatusBar style='light' />
+      <View style={styles.appContainer}>
+        <Button
+          title='Add New Goal'
+          color='#a065ec'
+          onPress={startAddGoalHandler}
+        />
+        <GoalInput
+          onAddGoal={addGoalHandler}
+          modalIsVisible={modalIsVisible}
+          onCancel={endAddGoalHandler}
+        />
+
+        <View style={styles.goalsContainer}>
+          <FlatList
+            data={courseGoals}
+            keyExtractor={(item) => item.id}
+            renderItem={(itemData) => (
+              <GoalItem
+                id={itemData.item.id}
+                text={itemData.item.text}
+                onDeleteItem={deleteGoalHandler}
+              />
+            )}
+          />
+        </View>
       </View>
-    )
+    </>
+  );
 }
-
-
 
 const styles = StyleSheet.create({
   appContainer: {
     flex: 1,
     paddingTop: 50,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
   },
-  inputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc'
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    width: '70%',
-    marginRight: 8,
-    padding: 8
-  },
+
   goalsContainer: {
-    flex: 5
+    flex: 5,
   },
-  goalItem: {
-    margin: 8,
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#5e0acc'
-  },
-  goalText: {
-    color:'white'
-  }
 });
